@@ -1,28 +1,38 @@
 import React, { Component } from 'react'
 import http from '../httpClient'
 import { Consumer } from '../components/Authenticator'
+import Pyramid from '../components/Pyramid'
 import "antd/dist/antd.css"
 import { Row, Col } from 'antd'
 
-const Box = props => (
-    <div style={{border: "2px", "border-style": "solid", height: "2em", width: "5em", backgroundColor: "blue"}}>
-        { props.children }
-    </div>
-)
+const exampleLadder = [
+    { place: 1, name: "scrubbles" },
+    { place: 2, name: "Lost Jinjo" },
+    { place: 3, name: "Dan" },
+    { place: 4, name: "Jamary" },
+    { place: 5, name: "Kirby" },
+    { place: 6, name: "Pastry" },
+    { place: 7, name: "Guildlin" },
+    { place: 8, name: "Thor" },
+    { place: 9, name: "Mac" },
+    { place: 10, name: "Silverknight" },
+    { place: 11, name: "Hypno" },
+    { place: 12, name: "Nonickname" },
+    { place: 13, name: "Water" },
+    { place: 14, name: "PicolaHitman" },
+    { place: 15, name: "Bodichitla" },
+    { place: 16, name: "SimplePickup" },
+    { place: 17, name: "Noahfecks" },
+    { place: 18, name: "Bum" },
+    { place: 19, name: "Blitz" },
+    { place: 20, name: "Katharsis" },
+    { place: 21, name: "ArcticKinger" },
+]
+
 export default class Dashboard extends Component {
     state = {
         profile: null,
-        current: "nothing",
-        pyramid: [
-            Array(1).fill(null),
-            Array(2).fill(null),
-            Array(3).fill(null),
-            Array(4).fill(null),
-            Array(5).fill(null),
-            Array(6).fill(null),
-            Array(7).fill(null),
-            Array(8).fill(null),
-        ]
+        current: "nothing"
     }
 
     componentDidMount() {
@@ -32,12 +42,13 @@ export default class Dashboard extends Component {
     }
 
     render() {
-        const { profile, pyramid, current } = this.state
+        const { profile, current } = this.state
         return (
             <div>
                 <Row>
                     <Col span={8}>
                         { profile && profile.displayName}
+                        { profile && profile.profileId }
                     </Col>
                     <Col span={8} offset={8}>
                         <Consumer>{context => (<button onClick={context.logout}>Logout</button>)}</Consumer>
@@ -52,11 +63,7 @@ export default class Dashboard extends Component {
                         ))}
                     </Col>
                     <Col span={20}>
-                        {pyramid.map((tier, idx) => (
-                            <Row key={idx} type="flex" justify="center">
-                                { tier.map((t, i) => (<Box key={i}>{t}</Box>)) }
-                            </Row>
-                        ))}
+                            <Pyramid players={exampleLadder} />
                     </Col>
                 </Row>
             </div>

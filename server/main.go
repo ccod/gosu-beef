@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ccod/blizzard"
+	"github.com/FuzzyStatic/blizzard"
 
 	bnet "github.com/ccod/go-bnet"
 	jwt "github.com/dgrijalva/jwt-go"
