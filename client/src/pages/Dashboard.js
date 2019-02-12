@@ -32,7 +32,8 @@ const exampleLadder = [
 export default class Dashboard extends Component {
     state = {
         profile: null,
-        current: "nothing"
+        current: "nothing",
+        players: exampleLadder
     }
 
     componentDidMount() {
@@ -42,7 +43,7 @@ export default class Dashboard extends Component {
     }
 
     render() {
-        const { profile, current } = this.state
+        const { profile, current, players } = this.state
         return (
             <div>
                 <Row>
@@ -63,7 +64,7 @@ export default class Dashboard extends Component {
                         ))}
                     </Col>
                     <Col span={20}>
-                            <Pyramid players={exampleLadder} />
+                            <Pyramid players={players} />
                     </Col>
                 </Row>
             </div>
