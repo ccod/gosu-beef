@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import http from '../httpClient'
 import { Consumer } from '../components/Authenticator'
-import Pyramid from '../components/Pyramid'
+//import Pyramid from '../components/Pyramid'
 import "antd/dist/antd.css"
 import { Row, Col } from 'antd'
 
@@ -37,8 +37,12 @@ export default class Dashboard extends Component {
     }
 
     componentDidMount() {
-        http.get('/accountID', {headers: {'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')}})
+        http.get('/player', {headers: {'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')}})
             .then(({data}) => { console.log(data); this.setState({profile: data }) })
+            .catch(err => console.error(err))
+
+        http.get('/players', {headers: {'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')}})
+            .then(({data}) => { console.log(data); this.setState({players: data }) })
             .catch(err => console.error(err))
     }
 
@@ -57,14 +61,14 @@ export default class Dashboard extends Component {
                 </Row>
                 <Row>
                     <Col span={4}>
-                        { current }
+                        { current.displayName }
                         <hr />
-                        {["James", "Chris", "Jane", "Mike"].map((n, idx) => (
-                            <Row key={idx}><Col span={6} onClick={e => this.setState({current: n})}>{n}</Col></Row>
+                        {players.map((n, idx) => (
+                            <Row key={idx}><Col span={6} onClick={e => this.setState({current: n})}>{n.displayName}</Col></Row>
                         ))}
                     </Col>
                     <Col span={20}>
-                            <Pyramid players={players} />
+                            {/* <Pyramid players={players} /> */}
                     </Col>
                 </Row>
             </div>

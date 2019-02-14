@@ -5,34 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/context"
 )
 
-func (s *Server) handlerSC2Player(w http.ResponseWriter, r *http.Request) {
-	reqToken := r.Header.Get("Authorization")
-	reqToken = strings.Split(reqToken, "Bearer ")[1]
-
+func (s *Server) handlerPlayer(w http.ResponseWriter, r *http.Request) {
+	accountID := context.Get(r, JAccID).(int)
+	fmt.Printf("AccountID in PlayerHandler: %v", accountID)
 	w.Header().Set("Content-type", "application/json")
-
-	token, err := jwt.ParseWithClaims(reqToken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(s.env.jwtSecret), nil
-	})
-
-	claims, ok := token.Claims.(*jwt.StandardClaims)
-	if !(ok && token.Valid) {
-		fmt.Printf("error with Parse with Claims: %s", err)
-		w.Write([]byte("{\"failure\":true}"))
-		return
-	}
-
-	accountID, err := strconv.Atoi(claims.Id)
-	if err != nil {
-		fmt.Printf("Atoi call failed: %s", err)
-		w.Write([]byte("{\"failure\":true}"))
-		return
-	}
 
 	var player Player
 	s.db.First(&player, accountID)
@@ -115,4 +95,27 @@ func (s *Server) handlerSC2Player(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(response)
+}
+
+func (s *Server) handlerPlayers(w http.ResponseWriter, r *http.Request) {
+	var players []Player
+	s.db.Find(&players)
+
+	// This is a temp measure for testing usability of the client
+	if len(players) == 1 {
+		temp := []string{
+			"scrubbles", "Lost Jinjo", "Dan", "Jamary", "Kirby", "Pastry", "Guildlin",
+			"Thor", "Mac", "Silverknight", "Hypno", "Nonickname", "Water",
+		}
+
+		for i := 0; i < len(temp); i++ {
+			player := players[0]
+			player.AccountID = i + 1
+			player.DisplayName = temp[i]
+			s.db.Create(&player)
+			players = append(players, player)
+		}
+	}
+
+	respondJSON(w, r, players)
 }

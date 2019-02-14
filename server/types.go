@@ -6,8 +6,30 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Challenge struct{}
-// Ranking struct{}
+// JwtKey is used to contain the account Id after verifying the JwtToken
+type JwtKey int
+
+// JAccID will be used to store accountID from JWT middleware
+const JAccID JwtKey = 0
+
+// Challenge another participant,
+// possibly set cron job to check challenge after a week
+// if no other challenge has been accepted by the recipient
+type Challenge struct {
+	gorm.Model
+	Issuer    int  `gorm:"foreign_key:player"`
+	Recipient int  `gorm:"foreign_key:player"`
+	Accepted  bool `gorm:"defaul:false" json:"accepted"`
+}
+
+// Ranking the order in which I pupulate the settle the beef pyramid
+type Ranking struct {
+	gorm.Model
+	Rank     int    `json:"rank"`
+	Player   Player `json:"player"`
+	PlayerID int    `json:"playerId"`
+}
+
 // History struct{}
 
 // Player is going to be basically my user struct

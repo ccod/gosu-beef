@@ -4,11 +4,43 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
-	"github.com/ccod/go-bnet"
-	"github.com/dgrijalva/jwt-go"
+	bnet "github.com/ccod/go-bnet"
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/context"
 	"golang.org/x/oauth2"
 )
+
+func (s *Server) jwtMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// for possible token errors, I should return an http.Error handler | later
+		reqToken := r.Header.Get("Authorization")
+		reqToken = strings.Split(reqToken, "Bearer ")[1]
+
+		token, err := jwt.ParseWithClaims(reqToken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(s.env.jwtSecret), nil
+		})
+
+		claims, ok := token.Claims.(*jwt.StandardClaims)
+		if !(ok && token.Valid) {
+			fmt.Printf("error with Parse with Claims: %s", err)
+			w.Write([]byte("{\"failure\":true}"))
+			return
+		}
+
+		accountID, err := strconv.Atoi(claims.Id)
+		if err != nil {
+			fmt.Printf("Atoi call failed: %s", err)
+			w.Write([]byte("{\"failure\":true}"))
+			return
+		}
+
+		context.Set(r, JAccID, accountID)
+
+		next(w, r)
+	})
+}
 
 func (s *Server) handlBnetLogin(w http.ResponseWriter, r *http.Request) {
 	url := s.oauthCfg.AuthCodeURL(s.oauthStateString, oauth2.AccessTypeOnline)
