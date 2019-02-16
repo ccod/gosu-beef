@@ -17,7 +17,7 @@ func main() {
 	db, _ := gorm.Open("sqlite3", "./gorm.db")
 	defer db.Close()
 
-	db.AutoMigrate(&Player{}, &LadderRecord{})
+	db.AutoMigrate(&Player{}, &LadderRecord{}, &Ranking{})
 
 	s := c.serverSetup(db)
 

@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
 import http from '../httpClient'
 import { Consumer } from '../components/Authenticator'
-//import Pyramid from '../components/Pyramid'
+import Pyramid from '../components/Pyramid'
 import "antd/dist/antd.css"
-import { Row, Col } from 'antd'
+import { Row, Col, Tabs } from 'antd'
 
 const exampleLadder = [
     { place: 1, name: "scrubbles" },
@@ -29,25 +29,71 @@ const exampleLadder = [
     { place: 21, name: "ArcticKinger" },
 ]
 
+const TabPane = Tabs.TabPane
+
+const Challenge = props => (
+    <>
+        <Col span={4}>
+            { props.current.displayName }
+            <hr />
+            {props.players.map((n, idx) => (
+                <Row key={idx}><Col span={6} onClick={props.select(n)}>{n.displayName}</Col></Row>
+            ))}
+        </Col>
+        <Col span={20}>
+                { <Pyramid mode="placement" players={props.players} rankings={props.rankings} click={props.click} /> }
+        </Col>
+    </>
+)
+
+
+// setup tabs with modes
+// pyramid based on logged in users, pyramid based on rank
 export default class Dashboard extends Component {
     state = {
         profile: null,
-        current: "nothing",
-        players: exampleLadder
+        current: { displayName: "nothing" },
+        players: [],
+        rankings: [],
+        mode: null
     }
+
+    selectCurrent = player => () => this.setState({current: player})
+
+    setPlayerRank = rank => () => {
+        if (this.state.current.displayName === "nothing") return
+
+        http.post(
+            '/rankings', 
+            {rank, player: this.state.current}, 
+            {headers: {'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')}}
+        ).then(({data}) => { 
+            console.log("ranking post:\n", data) 
+            if (this.state.rankings.find(r => r.rank === rank)) {
+                this.setState({rankings: this.state.rankings.map(r => rank === r.rank ? data : r)})
+            } else {
+                this.setState({rankings: this.state.rankings.concat(data)})
+            }
+        }).catch(err => console.log(err))
+    }
+
 
     componentDidMount() {
         http.get('/player', {headers: {'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')}})
-            .then(({data}) => { console.log(data); this.setState({profile: data }) })
+            .then(({data}) => { console.log("player data:\n",data); this.setState({profile: data }) })
             .catch(err => console.error(err))
 
         http.get('/players', {headers: {'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')}})
-            .then(({data}) => { console.log(data); this.setState({players: data }) })
+            .then(({data}) => { console.log("players data:\n",data); this.setState({players: data }) })
             .catch(err => console.error(err))
+        
+        http.get("/rankings", {headers: {'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')}})
+            .then(({data}) => { console.log("rankings data:\n",data); this.setState({rankings: data }) })
+            .catch(err => console.log(err))
     }
 
     render() {
-        const { profile, current, players } = this.state
+        const { profile, rankings, current, players } = this.state
         return (
             <div>
                 <Row>
@@ -60,16 +106,13 @@ export default class Dashboard extends Component {
                     </Col>
                 </Row>
                 <Row>
-                    <Col span={4}>
-                        { current.displayName }
-                        <hr />
-                        {players.map((n, idx) => (
-                            <Row key={idx}><Col span={6} onClick={e => this.setState({current: n})}>{n.displayName}</Col></Row>
-                        ))}
-                    </Col>
-                    <Col span={20}>
-                            {/* <Pyramid players={players} /> */}
-                    </Col>
+                    <Tabs defaultActiveKey="place">
+                        <TabPane tab="challenge" key="challenge">Challenge</TabPane>
+                        <TabPane tab="admin place" key="place">
+                            <Challenge current={current} players={players} rankings={rankings} select={this.selectCurrent} click={this.setPlayerRank} />
+                        </TabPane>
+                        <TabPane tab="hello" key="hello">hello</TabPane>
+                    </Tabs>
                 </Row>
             </div>
         )

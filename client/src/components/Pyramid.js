@@ -12,6 +12,10 @@ const recurb = (former, current, check) => {
 
 const findIndex = num => recurb(0, 1, num)
 
+const findRank = coord => {
+    return [...Array(coord[0] + 1).keys()].reduce((a, c) => a + c) + coord[1] + 1
+}
+
 // use the last place player to find the upper bound on the necessary tiers
 const makeGrid = num => {
     let tiers = findIndex(num)[0] + 1
@@ -33,19 +37,21 @@ const Box = props => (
     </div>
 )
 
+// turnary to decide if it should be last place of ranking, or length of players
+// a mode that highlights possible challenges given a player
 export default props => {
-    let lastPlace = Math.max.apply(null, props.players.map(x => x.place)),
-        grid = makeGrid(lastPlace),
-        filledGrid = insertPlayers(grid, props.players)
+    let size = props.mode === "placement" ? props.players.length : Math.max.apply(null, props.rankings.map(x => x.place)),
+        grid = makeGrid(size),
+        filledGrid = insertPlayers(grid, props.rankings),
+        fn = props.mode === "placement" ? findRank : null
 
     return (
         <>
             {filledGrid.map((tier, idx) => (
                 <Row key={idx} type="flex" justify="center">
-                    { tier.map((t, i) => (<Box key={i}>{t.name}</Box>)) }
+                    { tier.map((t, i) => (<Box key={i} onClick={props.click(fn([idx, i]))}>{ t && t.player.displayName }</Box>)) }
                 </Row>
             ))}
-
         </>
 
     )
