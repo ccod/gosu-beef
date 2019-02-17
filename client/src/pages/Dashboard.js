@@ -32,6 +32,13 @@ const exampleLadder = [
 const TabPane = Tabs.TabPane
 
 const Challenge = props => (
+    <Col span={24}>
+        { <Pyramid mode="challenge" profile={props.profile} rankings={props.rankings} click={props.click} /> }
+    </Col>
+
+)
+
+const Placement = props => (
     <>
         <Col span={4}>
             { props.current.displayName }
@@ -41,7 +48,7 @@ const Challenge = props => (
             ))}
         </Col>
         <Col span={20}>
-                { <Pyramid mode="placement" players={props.players} rankings={props.rankings} click={props.click} /> }
+            { <Pyramid mode="placement" players={props.players} rankings={props.rankings} click={props.click} /> }
         </Col>
     </>
 )
@@ -77,6 +84,19 @@ export default class Dashboard extends Component {
         }).catch(err => console.log(err))
     }
 
+    promotePlayer = rank => () => {
+        if (this.state.current.displayName === "nothing") return
+
+        http.post(
+            '/rankings/promote',
+            {rank, player: this.state.current},
+            {headers: {'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')}}
+        ).then(({data}) => {
+            let shiftOut = this.state.rankings.filter(r => r.rank <= rank)
+            this.setState({rankings: shiftOut.concat(data)})
+        }).catch(err => console.log(err))
+    }
+
 
     componentDidMount() {
         http.get('/player', {headers: {'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')}})
@@ -107,11 +127,15 @@ export default class Dashboard extends Component {
                 </Row>
                 <Row>
                     <Tabs defaultActiveKey="place">
-                        <TabPane tab="challenge" key="challenge">Challenge</TabPane>
-                        <TabPane tab="admin place" key="place">
-                            <Challenge current={current} players={players} rankings={rankings} select={this.selectCurrent} click={this.setPlayerRank} />
+                        <TabPane tab="challenge" key="challenge">
+                            <Challenge profile={profile} rankings={rankings} click={this.setPlayerRank} />
                         </TabPane>
-                        <TabPane tab="hello" key="hello">hello</TabPane>
+                        <TabPane tab="place" key="place">
+                            <Placement current={current} players={players} rankings={rankings} select={this.selectCurrent} click={this.setPlayerRank} />
+                        </TabPane>
+                        <TabPane tab="promote" key="promote">
+                            <Placement current={current} players={players} rankings={rankings} select={this.selectCurrent} click={this.promotePlayer} />
+                        </TabPane>
                     </Tabs>
                 </Row>
             </div>

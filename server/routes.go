@@ -13,6 +13,7 @@ func connectRoutes(r *mux.Router, s *Server) {
 	r.HandleFunc("/rankings", s.jwtMiddleware(s.listRanking)).Methods("GET")
 	r.HandleFunc("/rankings/{id}", s.jwtMiddleware(s.getRanking)).Methods("GET")
 	r.HandleFunc("/rankings", s.jwtMiddleware(s.createRanking)).Methods("POST")
+	r.HandleFunc("/rankings/promote", s.jwtMiddleware(s.promoteRanking)).Methods("POST")
 	// r.HandleFunc("rankings/{id}", s.jwtMiddleware(s.updateRanking)).Methods("PUT")
 	r.HandleFunc("/rankings/{id}", s.jwtMiddleware(s.deleteRanking)).Methods("DELETE")
 }

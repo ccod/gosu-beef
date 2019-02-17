@@ -60,8 +60,40 @@ func (s *Server) createRanking(w http.ResponseWriter, r *http.Request) {
 }
 
 // promoteRanking is for normal challenge promotion, takes rank of the challenged, and rotates players below down a rank
+// TODO: still need to remove previous player rank if exists
 func (s *Server) promoteRanking(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var newRanking Ranking
+	var rankings []Ranking
+	err := decoder.Decode(&newRanking)
+	if err != nil {
+		fmt.Printf("failed to decode body: %s", err)
+		return
+	}
 
+	s.db.Where("rank >= ?", newRanking.Rank).Find(&rankings)
+	s.db.Where("rank >= ?", newRanking.Rank).Delete(Ranking{})
+	for i := 0; i < len(rankings); i++ {
+		var player Player
+		if rankings[i].PlayerID == newRanking.PlayerID {
+			continue
+		}
+
+		nextRanking := Ranking{
+			Rank:     rankings[i].Rank + 1,
+			PlayerID: rankings[i].PlayerID,
+		}
+
+		s.db.Create(&nextRanking)
+		s.db.Model(&nextRanking).Related(&player)
+		nextRanking.Player = player
+		rankings[i] = nextRanking
+	}
+
+	s.db.Create(&newRanking)
+
+	rankings = append(rankings, newRanking)
+	respondJSON(w, r, rankings)
 }
 
 func (s *Server) deleteRanking(w http.ResponseWriter, r *http.Request) {

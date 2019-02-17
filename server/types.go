@@ -26,7 +26,7 @@ type Challenge struct {
 type Ranking struct {
 	gorm.Model
 	Rank     int    `json:"rank"`
-	Player   Player `json:"player"`
+	Player   Player `gorm:"foreignkey:PlayerID" json:"player"`
 	PlayerID int    `json:"playerId"`
 }
 

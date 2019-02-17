@@ -12,6 +12,15 @@ const recurb = (former, current, check) => {
 
 const findIndex = num => recurb(0, 1, num)
 
+const range = (start, end) => [...Array(1+end-start).keys()].map(v => start+v)
+
+const challengRanks = rank => {
+    let coord = findIndex(rank),
+        c = (coord[0] - 1 >= 0) ? findRank([coord[0] -1, 0]) : 1
+
+    return range(c, rank - 1)
+}
+
 const findRank = coord => {
     return [...Array(coord[0] + 1).keys()].reduce((a, c) => a + c) + coord[1] + 1
 }
@@ -24,32 +33,48 @@ const makeGrid = num => {
 
 const insertPlayers = (grid, players) => {
     players.forEach(p => {
-        let coord = findIndex(p.place)
+        let coord = findIndex(p.rank)
         grid[coord[0]][coord[1]] = p
     })
 
     return grid
 }
 
-const Box = props => (
-    <div {...props} style={{border: "2px", "borderStyle": "solid", height: "2em", width: "5em", backgroundColor: "blue"}}>
+const Box = props => {
+    console.log("props.green: ", props.green)
+    return (<div {...props} style={{border: "2px", "borderStyle": "solid", height: "2em", width: "5em", backgroundColor: props.green ? "green" : "blue"}}>
         { props.children }
-    </div>
-)
+    </div>)
+}
 
 // turnary to decide if it should be last place of ranking, or length of players
 // a mode that highlights possible challenges given a player
 export default props => {
-    let size = props.mode === "placement" ? props.players.length : Math.max.apply(null, props.rankings.map(x => x.place)),
+    let size = props.mode === "placement" ? props.players.length : Math.max.apply(null, props.rankings.map(x => x.rank)),
+        _ = console.log("size: ", size),
         grid = makeGrid(size),
         filledGrid = insertPlayers(grid, props.rankings),
-        fn = props.mode === "placement" ? findRank : null
+        fn = props.mode === "placement" ? findRank : findRank 
+
+    if (props.mode === "challenge") {
+        var profileRank = props.rankings.find(r => r.playerId === props.profile.accountId)
+        console.log("profileRank: ", profileRank)
+        var challengeRange = challengRanks(profileRank.rank)
+        console.log("challengeRange: ", challengeRange)
+    }
 
     return (
         <>
             {filledGrid.map((tier, idx) => (
                 <Row key={idx} type="flex" justify="center">
-                    { tier.map((t, i) => (<Box key={i} onClick={props.click(fn([idx, i]))}>{ t && t.player.displayName }</Box>)) }
+                    { tier.map((t, i) => {
+                        if (props.mode === "placement") {
+                            return (<Box key={i} onClick={props.click(fn([idx, i]))}>{ t && t.player.displayName }</Box>)
+                        }
+                        if (props.mode === "challenge") {
+                            return (<Box key={i} green={t && challengeRange.find(r => r === t.rank)} onClick={props.click(fn([idx, i]))}>{ t && t.player.displayName }</Box>)
+                        }
+                    })}
                 </Row>
             ))}
         </>
