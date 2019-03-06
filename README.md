@@ -1,6 +1,7 @@
 ## Gosu Settle The Beef
 
 currently a work in progress
+quick edit
 
 ### What we have:
 - A way to login, so I can verify who the user is, and if they are part of the guild
